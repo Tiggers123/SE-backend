@@ -1,41 +1,16 @@
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_USER=postgres
-      - DB_HOST=database
-      - DB_NAME=pharmacy_db
-      - DB_PASSWORD=password
-      - DB_PORT=5432
-    depends_on:
-      - database
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    command: "npm run start"
-    networks:
-      - app-network
+version: "3.8"
 
-  database:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: pharmacy_db
+services:
+  db:
+    image: postgres:14-alpine
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pharmacy_db
     volumes:
-      - db-data:/var/lib/postgresql/data
-    networks:
-      - app-network
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  db-data:
-
-networks:
-  app-network:
+  postgres_data:

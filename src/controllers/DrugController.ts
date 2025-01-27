@@ -1,15 +1,14 @@
 import { Request, Response } from "express";
-import { Pool } from "pg";
 import { Drug } from "../models/Drug";
-const pool = new Pool();
+import pool from "../config/database";
 
 // Get all drugs
 export const getAllDrugs = async (req: Request, res: Response) => {
   try {
     const result = await pool.query("SELECT * FROM drugs");
-    res.json(result.rows);
+    res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching drugs:", error);
     res.status(500).json({ error: "Failed to fetch drugs" });
   }
 };
@@ -31,7 +30,17 @@ export const addDrug = async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
       "INSERT INTO drugs (name, code, detail, usage, slang_food, side_effect, drug_type, unit_type, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-      [name, code, detail, usage, slang_food, side_effect, drug_type, unit_type, price]
+      [
+        name,
+        code,
+        detail,
+        usage,
+        slang_food,
+        side_effect,
+        drug_type,
+        unit_type,
+        price,
+      ]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -41,7 +50,10 @@ export const addDrug = async (req: Request, res: Response) => {
 };
 
 // Update a drug by ID
-export const updateDrug = async (req: Request, res: Response): Promise<void> => {
+export const updateDrug = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { drug_id } = req.params;
   const {
     name,
@@ -84,7 +96,10 @@ export const updateDrug = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Get a drug by ID
-export const getDrugById = async (req: Request, res: Response): Promise<void> => {
+export const getDrugById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { drug_id } = req.params;
 
   try {
@@ -104,7 +119,10 @@ export const getDrugById = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Delete a drug by ID
-export const deleteDrug = async (req: Request, res: Response): Promise<void> => {
+export const deleteDrug = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { drug_id } = req.params;
 
   try {

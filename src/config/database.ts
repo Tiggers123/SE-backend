@@ -1,38 +1,38 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
-
 dotenv.config();
 
-// Database configuration
-const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "pharmacy_db",
-  password: process.env.DB_PASSWORD || "password",
-  port: parseInt(process.env.DB_PORT || "5432"),
-});
+// Log environment variables to ensure they are loaded
+console.log("DB_USER:", process.env.POSTGRES_USER);
+console.log("DB_PASSWORD:", process.env.POSTGRES_PASSWORD);
+console.log("DB_NAME:", process.env.POSTGRES_DB);
+console.log("DB_HOST:", process.env.POSTGRES_HOST);
+console.log("DB_PORT:", process.env.POSTGRES_PORT);
 
-// Test database connection
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error("Error acquiring client:", err.stack);
-  }
-  if (!client) {
-    return console.error("No client available");
-  }
-  client.query("SELECT NOW()", (err, result) => {
-    release();
-    if (err) {
-      return console.error("Error executing query:", err.stack);
-    }
-    console.log("Connected to Database");
-  });
+const pool = new Pool({
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD, // Use the environment variable for the password
+  database: process.env.POSTGRES_DB,
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT || "5432"),
 });
 
 // Create tables if they don't exist
 const createTables = async () => {
+  const client = await pool.connect();
   try {
-    await pool.query(`
+    await client.query("BEGIN");
+
+    // Drop existing tables in correct order
+    await client.query(`
+      DROP TABLE IF EXISTS bill_items CASCADE;
+      DROP TABLE IF EXISTS bills CASCADE;
+      DROP TABLE IF EXISTS stocks CASCADE;
+      DROP TABLE IF EXISTS drugs CASCADE;
+    `);
+
+    // Create tables
+    await client.query(`
       CREATE TABLE IF NOT EXISTS drugs (
         drug_id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -61,17 +61,37 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS bills (
         bill_id SERIAL PRIMARY KEY,
         customer_name VARCHAR(100),
-        items JSONB NOT NULL,
         total_amount DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS bill_items (
+        bill_item_id SERIAL PRIMARY KEY,
+        bill_id INTEGER REFERENCES bills(bill_id),
+        stock_id INTEGER REFERENCES stocks(stock_id),
+        quantity INTEGER NOT NULL,
+        subtotal DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
-    console.log("Tables created successfully");
+    await client.query("COMMIT");
+    console.log("✅ Tables recreated successfully");
   } catch (error) {
-    console.error("Error creating tables:", error);
+    await client.query("ROLLBACK");
+    console.error("❌ Error recreating tables:", error);
+  } finally {
+    client.release();
   }
 };
 
-createTables();
+pool
+  .connect()
+  .then(() => {
+    console.log("✅ Connected to DB");
+    return createTables();
+  })
+  .catch((err) => {
+    console.error("❌ Error connecting to DB:", err);
+  });
 
 export default pool;

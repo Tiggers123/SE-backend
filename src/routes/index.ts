@@ -15,6 +15,8 @@ import {
 } from "../controllers/DrugController";
 
 import { createBill, getBillById } from "../controllers/BillController";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
 
@@ -32,5 +34,9 @@ router.delete("/drugs/:id", deleteDrug);
 // Bill routes
 router.post("/bills", createBill);
 router.get("/bills/:bill_id", getBillById);
+
+router.get("/", (req: Request, res: Response) => {
+  res.send("Hello World");
+});
 
 export default router;

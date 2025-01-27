@@ -1,79 +1,111 @@
-import { promises } from "dns";
 import { Request, Response } from "express";
-import { Pool } from "pg"; // PostgreSQL client
-const pool = new Pool();
+import pool from "../config/database";
 
 export const createBill = async (req: Request, res: Response) => {
-    const client = await pool.connect();
-  
-    try {
-      const { customer_name, items } = req.body;
-  
-      let totalAmount = 0;
-      const detailedItems: any[] = [];
-  
-      for (const item of items) {
-        const { stock_id, quantity } = item;
-  
-        const drugQuery = "SELECT * FROM drugs WHERE drug_id = $1";
-        const drugResult = await client.query(drugQuery, [stock_id]);
-  
-        if (drugResult.rows.length === 0) {
-          throw new Error(`Drug with stock_id ${stock_id} not found`);
-        }
-  
-        const drug = drugResult.rows[0];
-        totalAmount += drug.price * quantity;
-  
-        detailedItems.push({
-          stock_id,
-          drug_name: drug.name,
-          quantity,
-          price_per_item: drug.price,
-        });
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const { customer_name, items } = req.body;
+
+    let totalAmount = 0;
+
+    // Create the bill first
+    const insertBillQuery = `
+      INSERT INTO bills (customer_name, total_amount)
+      VALUES ($1, $2)
+      RETURNING bill_id;
+    `;
+    const billResult = await client.query(insertBillQuery, [customer_name, 0]);
+    const billId = billResult.rows[0].bill_id;
+
+    // Add each item
+    for (const item of items) {
+      const { stock_id, quantity } = item;
+
+      // Get stock details
+      const stockQuery = "SELECT unit_price FROM stocks WHERE stock_id = $1";
+      const stockResult = await client.query(stockQuery, [stock_id]);
+
+      if (stockResult.rows.length === 0) {
+        throw new Error(`Stock with id ${stock_id} not found`);
       }
-  
-      const insertBillQuery = `
-        INSERT INTO bills (customer_name, items, total_amount)
-        VALUES ($1, $2, $3)
-        RETURNING *;
-      `;
-      const billResult = await client.query(insertBillQuery, [
-        customer_name,
-        JSON.stringify(detailedItems),
-        totalAmount,
-      ]);
-  
-      res.status(201).json({
-        message: "Bill created successfully",
-        bill: billResult.rows[0],
-      });
-    } catch (error: any) {
-      res.status(500).json({ error: "Failed to create bill", details: error.message });
-    } finally {
-      client.release();
+
+      const unitPrice = stockResult.rows[0].unit_price;
+      const subtotal = unitPrice * quantity;
+      totalAmount += subtotal;
+
+      // Insert bill item without unit_price
+      await client.query(
+        `INSERT INTO bill_items (bill_id, stock_id, quantity, subtotal)
+         VALUES ($1, $2, $3, $4)`,
+        [billId, stock_id, quantity, subtotal]
+      );
     }
-  };
-  
-  // Get a bill by ID
-  export const getBillById = async (req: Request, res: Response): Promise<void> => {
-    const client = await pool.connect();
-  
-    try {
-      const { id } = req.params;
-  
-      const billQuery = "SELECT * FROM bills WHERE id = $1";
-      const billResult = await client.query(billQuery, [id]);
-  
-      if (billResult.rows.length === 0) {
-        res.status(404).json({ error: "Bill not found" });
-      }
-  
-      res.status(200).json(billResult.rows[0]);
-    } catch (error: any) {
-      res.status(500).json({ error: "Failed to fetch bill", details: error.message });
-    } finally {
-      client.release();
+
+    // Update bill total
+    await client.query(
+      "UPDATE bills SET total_amount = $1 WHERE bill_id = $2",
+      [totalAmount, billId]
+    );
+
+    await client.query("COMMIT");
+
+    // Get complete bill
+    const completeBill = await client.query(
+      `SELECT 
+        b.bill_id,
+        b.customer_name,
+        b.total_amount,
+        b.created_at,
+        bi.bill_item_id,
+        bi.stock_id,
+        bi.quantity,
+        bi.subtotal,
+        s.unit_price,
+        d.name as drug_name
+       FROM bills b 
+       JOIN bill_items bi ON b.bill_id = bi.bill_id
+       JOIN stocks s ON bi.stock_id = s.stock_id
+       JOIN drugs d ON s.drug_id = d.drug_id
+       WHERE b.bill_id = $1`,
+      [billId]
+    );
+
+    res.status(201).json({
+      message: "Bill created successfully",
+      bill: completeBill.rows,
+    });
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    res.status(500).json({
+      error: "Failed to create bill",
+      details: error.message,
+    });
+  } finally {
+    client.release();
+  }
+};
+
+export const getBillById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { bill_id } = req.params;
+
+    const billQuery = "SELECT * FROM bills WHERE bill_id = $1";
+    const billResult = await pool.query(billQuery, [bill_id]);
+
+    if (billResult.rows.length === 0) {
+      res.status(404).json({ error: "Bill not found" });
+      return;
     }
-  };
-  
+
+    res.status(200).json(billResult.rows[0]);
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ error: "Failed to fetch bill", details: error.message });
+  }
+};

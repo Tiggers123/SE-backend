@@ -4,6 +4,7 @@ import routes from "./src/routes";
 import pool from "./src/config/database";
 
 const app = express();
+require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
@@ -28,6 +29,7 @@ async function startServer() {
   }
 }
 
+console.log("Starting server...");
 startServer();
 
 export default app;
