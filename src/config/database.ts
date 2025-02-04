@@ -73,6 +73,16 @@ const createTables = async () => {
         subtotal DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS expense (
+        id SERIAL PRIMARY KEY,
+        datetime TIMESTAMP NOT NULL,
+        orderid INTEGER NOT NULL,
+        quantity INTEGER[] NOT NULL,
+        name TEXT[] NOT NULL,
+        price NUMERIC[] NOT NULL,
+        totalprice NUMERIC NOT NULL
+      );
     `);
     await client.query("COMMIT");
     console.log("✅ Tables recreated successfully");

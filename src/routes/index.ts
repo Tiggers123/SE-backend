@@ -15,6 +15,9 @@ import {
 } from "../controllers/DrugController";
 
 import { createBill, getBillById,removeBill,updateBill,history,dashboard } from "../controllers/BillController";
+
+import { getAllExpenses,createExpense,deleteExpense,updateExpense,getExpenseById } from "../controllers/expenseController";
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -38,6 +41,13 @@ router.delete("/api/bill/remove/:id", removeBill);
 router.put("/api/bill/update/:id", updateBill);
 router.get("/api/bill/history", history);
 router.get("/api/bill/dashboard/:year", dashboard);
+
+router.get("api/expenses", getAllExpenses);
+router.post("api/expense/create", createExpense);
+router.delete("api/expense/remove/:id", deleteExpense);
+router.put("api/expense/update/:id", updateExpense);
+router.get("api/expense/:id", getExpenseById);
+
 
 
 router.get("/", (req: Request, res: Response) => {
