@@ -60,7 +60,7 @@ const createTables = async () => {
 
       CREATE TABLE IF NOT EXISTS bills (
         bill_id SERIAL PRIMARY KEY,
-        customer_name VARCHAR(100),
+        customer_name VARCHAR(100) NULL,
         total_amount DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -77,7 +77,6 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS expense (
         id SERIAL PRIMARY KEY,
         datetime TIMESTAMP NOT NULL,
-        orderid INTEGER NOT NULL,
         quantity INTEGER[] NOT NULL,
         name TEXT[] NOT NULL,
         price NUMERIC[] NOT NULL,
