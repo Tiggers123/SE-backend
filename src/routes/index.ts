@@ -14,7 +14,7 @@ import {
   deleteDrug,
 } from "../controllers/DrugController";
 
-import { createBill, getBillById } from "../controllers/BillController";
+import { createBill, getBillById,removeBill,updateBill,history,dashboard } from "../controllers/BillController";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -32,8 +32,13 @@ router.put("/drugs/:id", updateDrug);
 router.delete("/drugs/:id", deleteDrug);
 
 // Bill routes
-router.post("/bills", createBill);
-router.get("/bills/:bill_id", getBillById);
+router.post("/api/bill/create", createBill);
+router.get("/api/bill/:bill_id", getBillById);
+router.delete("/api/bill/remove/:id", removeBill);
+router.put("/api/bill/update/:id", updateBill);
+router.get("/api/bill/history", history);
+router.get("/api/bill/dashboard/:year", dashboard);
+
 
 router.get("/", (req: Request, res: Response) => {
   res.send("Hello World");

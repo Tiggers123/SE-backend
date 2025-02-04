@@ -109,3 +109,98 @@ export const getBillById = async (
       .json({ error: "Failed to fetch bill", details: error.message });
   }
 };
+
+export const removeBill = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  const { id } = req.params;
+
+  try {
+    await client.query("BEGIN");
+
+    const deleteBillQuery = "DELETE FROM bills WHERE bill_id = $1 RETURNING *";
+    const billResult = await client.query(deleteBillQuery, [id]);
+
+    if (billResult.rows.length === 0) {
+      res.status(404).json({ error: "Bill not found" });
+      return;
+    }
+
+    await client.query("COMMIT");
+    res.status(200).json({ message: "Bill deleted successfully" });
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: "Failed to delete bill", details: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const updateBill = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  const { id } = req.params;
+  const { customer_name, total_amount } = req.body;
+
+  try {
+    await client.query("BEGIN");
+
+    const updateBillQuery = `
+      UPDATE bills
+      SET customer_name = $1, total_amount = $2
+      WHERE bill_id = $3
+      RETURNING *;
+    `;
+    const billResult = await client.query(updateBillQuery, [customer_name, total_amount, id]);
+
+    if (billResult.rows.length === 0) {
+      res.status(404).json({ error: "Bill not found" });
+      return;
+    }
+
+    await client.query("COMMIT");
+    res.status(200).json(billResult.rows[0]);
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: "Failed to update bill", details: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const history = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+
+  try {
+    const historyQuery = "SELECT * FROM bills ORDER BY created_at DESC";
+    const historyResult = await client.query(historyQuery);
+
+    res.status(200).json(historyResult.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to fetch bill history", details: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const dashboard = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  const { year } = req.params;
+
+  try {
+    const dashboardQuery = `
+      SELECT
+        EXTRACT(MONTH FROM created_at) AS month,
+        SUM(total_amount) AS total_sales
+      FROM bills
+      WHERE EXTRACT(YEAR FROM created_at) = $1
+      GROUP BY month
+      ORDER BY month;
+    `;
+    const dashboardResult = await client.query(dashboardQuery, [year]);
+
+    res.status(200).json(dashboardResult.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to fetch dashboard data", details: error.message });
+  } finally {
+    client.release();
+  }
+};
