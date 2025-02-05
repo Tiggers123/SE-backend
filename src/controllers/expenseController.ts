@@ -3,7 +3,7 @@ import pool from "../config/database";
 
 export const createExpense = async (req: Request, res: Response) => {
   const client = await pool.connect();
-
+    console.log(req.body);
   try {
     await client.query("BEGIN");
     const { datetime, orderid, quantity, name, price, totalprice } = req.body;

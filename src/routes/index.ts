@@ -35,18 +35,18 @@ router.put("/drugs/:id", updateDrug);
 router.delete("/drugs/:id", deleteDrug);
 
 // Bill routes
-router.post("/api/bill/create", createBill);
-router.get("/api/bill/:bill_id", getBillById);
-router.delete("/api/bill/remove/:id", removeBill);
-router.put("/api/bill/update/:id", updateBill);
-router.get("/api/bill/history", history);
-router.get("/api/bill/dashboard/:year", dashboard);
+router.post("/bill/create", createBill);
+router.get("/bill/:bill_id", getBillById);
+router.delete("/bill/remove/:id", removeBill);
+router.put("/bill/update/:id", updateBill);
+router.get("/bill/history", history);
+router.get("/bill/dashboard/:year", dashboard);
 
-router.get("api/expenses", getAllExpenses);
-router.post("api/expense/create", createExpense);
-router.delete("api/expense/remove/:id", deleteExpense);
-router.put("api/expense/update/:id", updateExpense);
-router.get("api/expense/:id", getExpenseById);
+router.get("/expenses", getAllExpenses);
+router.post("/expense/create", createExpense);
+router.delete("/expense/remove/:id", deleteExpense);
+router.put("/expense/update/:id", updateExpense);
+router.get("/expense/:id", getExpenseById);
 
 
 
