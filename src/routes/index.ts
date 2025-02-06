@@ -42,7 +42,7 @@ router.put("/bill/update/:id", updateBill);
 router.get("/bill/history", history);
 router.get("/bill/dashboard/:year", dashboard);
 
-router.get("/expenses", getAllExpenses);
+router.get("/expense", getAllExpenses);
 router.post("/expense/create", createExpense);
 router.delete("/expense/remove/:id", deleteExpense);
 router.put("/expense/update/:id", updateExpense);
