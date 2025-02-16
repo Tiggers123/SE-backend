@@ -1,5 +1,5 @@
 export interface Bill {
-    id?: number; // Optional for when creating a new bill
+    id: number; // Optional for when creating a new bill
     customer_name: string;
     items: BillItem[]; // Detailed items in the bill
     total_amount: number;
@@ -13,4 +13,3 @@ export interface Bill {
     quantity: number;
     price_per_item?: number; // Filled after fetching from the database
   }
-  
