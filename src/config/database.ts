@@ -45,7 +45,8 @@ const createTables = async () => {
         unit_type VARCHAR(50) NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        sold_count INTEGER DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS stocks (
@@ -61,6 +62,7 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS bills (
         bill_id SERIAL PRIMARY KEY,
         customer_name VARCHAR(100) NULL,
+        discount DECIMAL(5,2) DEFAULT 0,
         total_amount DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
