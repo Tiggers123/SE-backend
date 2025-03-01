@@ -6,6 +6,7 @@ import {
   getStockByDrugId,
   getStockByStockId,
   getTopSellingStocks,
+  getTotalSoldDrugs,
 } from "../controllers/StockController";
 
 import {
@@ -44,7 +45,7 @@ router.put("/stocks/:id", updateStock);
 router.get("/stocks/drug/:drug_id", getStockByDrugId);
 router.get("/stocks/drugs/:stock_id", getStockByStockId);
 router.get("/stocks/top-selling", getTopSellingStocks);
-
+router.get("/stocks/totalsell", getTotalSoldDrugs);
 
 router.get("/drugs", getAllDrugs);
 router.get("/drugs/:id", getDrugById);
@@ -64,7 +65,8 @@ router.get("/bill/dashboard/:year", dashboard);
 router.get("/sell/info/:bill_id", getBillInfo);
 
 //expense
-router.get("/expense/:page/:searchQuery?", getAllExpenses);
+// router.get("/expense/:page/:searchQuery?", getAllExpenses);
+router.get("/expense/:page/:day?/:month?/:year?", getAllExpenses);
 router.post("/expense/create", createExpense);
 router.put("/expense/update/:id", updateExpense);
 router.delete("/expense/remove/:id", deleteExpense);

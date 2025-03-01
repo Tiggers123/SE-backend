@@ -66,45 +66,128 @@ export const createExpense = async (req: Request, res: Response) => {
   }
 };
 
+// export const getAllExpenses = async (req: Request, res: Response) => {
+//   const client = await pool.connect();
+//   try {
+//     const { page, searchQuery } = req.params;
+//     const pageNumber = parseInt(page, 10) || 1;
+
+//     const pageSize = 10; 
+//     const offset = (pageNumber - 1) * pageSize; 
+
+//     const countQuery = "SELECT COUNT(*) FROM expense";
+//     const countResult = await client.query(countQuery);
+//     const totalRows = parseInt(countResult.rows[0].count, 10);
+
+//     const getExpensesQuery = `
+//       SELECT * FROM expense
+//       ORDER BY CAST(orderid AS INTEGER) DESC
+//       LIMIT $1 OFFSET $2;
+//     `;
+
+//     const expensesResult = await client.query(getExpensesQuery, [
+//       pageSize,
+//       offset,
+//     ]);
+
+//     const totalPages = Math.ceil(totalRows / pageSize);
+
+//     res.json({
+//       success: true,
+//       expenses: expensesResult.rows,
+//       totalRows,
+//       totalPages,
+//       currentPage: pageNumber,
+//     });
+//   } catch (e) {
+//     res.status(500).json({ error: (e as Error).message });
+//   } finally {
+//     client.release();
+//   }
+// }; ของแทร่
+
+
 export const getAllExpenses = async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
-    const { page, searchQuery } = req.params;
-    const pageNumber = parseInt(page, 10) || 1;
+    const { page, day, month, year } = req.params;
+    const pageNumber = parseInt(page, 10) || 1; 
 
     const pageSize = 10; 
     const offset = (pageNumber - 1) * pageSize; 
 
-    const countQuery = "SELECT COUNT(*) FROM expense";
-    const countResult = await client.query(countQuery);
+    
+    let countQuery = "SELECT COUNT(*) FROM expense";
+    let countParams: any[] = [];
+
+  
+    let whereConditions: string[] = [];
+
+    if (day) {
+      whereConditions.push(`EXTRACT(DAY FROM datetime) = $1`);
+      countParams.push(parseInt(day));
+    }
+    if (month) {
+      whereConditions.push(
+        `EXTRACT(MONTH FROM datetime) = $${countParams.length + 1}`
+      );
+      countParams.push(parseInt(month));
+    }
+    if (year) {
+      whereConditions.push(
+        `EXTRACT(YEAR FROM datetime) = $${countParams.length + 1}`
+      );
+      countParams.push(parseInt(year));
+    }
+
+ 
+    if (whereConditions.length > 0) {
+      countQuery += ` WHERE ${whereConditions.join(" AND ")}`;
+    }
+
+    const countResult = await client.query(countQuery, countParams);
     const totalRows = parseInt(countResult.rows[0].count, 10);
 
-    const getExpensesQuery = `
+  
+    let getExpensesQuery = `
       SELECT * FROM expense
       ORDER BY CAST(orderid AS INTEGER) DESC
-      LIMIT $1 OFFSET $2;
+      LIMIT $1 OFFSET $2
     `;
+    let getExpensesParams: any[] = [pageSize, offset];
 
-    const expensesResult = await client.query(getExpensesQuery, [
-      pageSize,
-      offset,
-    ]);
+  
+    if (whereConditions.length > 0) {
+      getExpensesQuery = `
+        SELECT * FROM expense
+        WHERE ${whereConditions.join(" AND ")}
+        ORDER BY CAST(orderid AS INTEGER) DESC
+        LIMIT $${countParams.length + 1} OFFSET $${countParams.length + 2}
+      `;
+      getExpensesParams = [...countParams, pageSize, offset];
+    }
 
-    const totalPages = Math.ceil(totalRows / pageSize);
+    const expensesResult = await client.query(
+      getExpensesQuery,
+      getExpensesParams
+    );
+
+    const totalPages = Math.ceil(totalRows / pageSize); 
 
     res.json({
       success: true,
-      expenses: expensesResult.rows,
-      totalRows,
-      totalPages,
-      currentPage: pageNumber,
+      expenses: expensesResult.rows, 
+      totalRows, 
+      totalPages, 
+      currentPage: pageNumber, 
     });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   } finally {
     client.release();
   }
-}; 
+};
+
 
 export const updateExpense = async (req: Request, res: Response) => {
   const client = await pool.connect();

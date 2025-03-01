@@ -165,3 +165,34 @@ export const getTopSellingStocks = async (
     client.release();
   }
 };
+
+export const getTotalSoldDrugs = async (req: Request, res: Response): Promise<void> => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT 
+        d.name AS drug_name,
+        COALESCE(SUM(bi.quantity), 0) AS total_quantity_sold
+      FROM drugs d
+      LEFT JOIN stocks s ON d.drug_id = s.drug_id
+      LEFT JOIN bill_items bi ON s.stock_id = bi.stock_id AND bi.status = 'confirmed'
+      GROUP BY d.name
+      ORDER BY total_quantity_sold DESC;
+    `;
+
+    const result = await client.query(query);
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: "No sold drugs found" });
+      return;
+    }
+
+    res.status(200).json(result.rows); // Return the drugs with total quantity sold
+  } catch (error) {
+    console.error("Error fetching total sold drugs:", error);
+    res.status(500).json({ error: "Failed to fetch total sold drugs" });
+  } finally {
+    client.release();
+  }
+};
