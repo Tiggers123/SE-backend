@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Drug } from "../models/Drug";
 import pool from "../config/database";
 
 export const getAllDrugs = async (req: Request, res: Response) => {
@@ -108,6 +107,7 @@ export const updateDrug = async (
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "Drug not found" });
+      return;
     }
 
     res.json(result.rows[0]);
@@ -131,6 +131,7 @@ export const getDrugById = async (
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "Drug not found" });
+      return;
     }
 
     res.json(result.rows[0]);
@@ -155,6 +156,7 @@ export const deleteDrug = async (
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "Drug not found" });
+      return;
     }
 
     res.json({ message: "Drug deleted successfully", drug: result.rows[0] });

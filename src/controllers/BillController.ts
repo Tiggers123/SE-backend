@@ -157,6 +157,22 @@ export const createBill = async (req: Request, res: Response) => {
           customPrice,
         ]
       );
+
+      // Update sold_count for the drug
+      await client.query(
+        `UPDATE drugs
+         SET sold_count = sold_count + $1
+         WHERE drug_id = $2`,
+        [quantity, drug_id]
+      );
+
+      // Deduct stock amount
+      await client.query(
+        `UPDATE stocks
+         SET amount = amount - $1
+         WHERE stock_id = $2`,
+        [quantity, stock_id]
+      );
     }
 
     await client.query("COMMIT");
