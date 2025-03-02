@@ -11,6 +11,5 @@ export interface Drug {
     drug_type: string;
     unit_type: string;
     price: number;
-    sold_count?: number; // Optional
   }
   
