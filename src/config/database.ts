@@ -73,8 +73,9 @@ const createTables = async () => {
         stock_id INTEGER REFERENCES stocks(stock_id),
         quantity INTEGER NOT NULL,
         subtotal DECIMAL(10,2) NOT NULL,
-        service VARCHAR(255) DEFAULT NULL,  -- Added service column
-        custom_price DECIMAL(10,2) DEFAULT 0,  -- Added custom_price column
+        service VARCHAR(255) DEFAULT NULL, 
+        status VARCHAR(50) DEFAULT 'pending', 
+        custom_price DECIMAL(10,2) DEFAULT 0,  
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
