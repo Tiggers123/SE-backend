@@ -12,11 +12,25 @@ import {
   getDrugById,
   updateDrug,
   deleteDrug,
+  getTopDrugs,
 } from "../controllers/DrugController";
 
-import { createBill, getBillById,removeBill,updateBill,history,dashboard } from "../controllers/BillController";
+import {
+  createBill,
+  getBillById,
+  removeBill,
+  updateBill,
+  history,
+  dashboard,
+} from "../controllers/BillController";
 
-import { getAllExpenses,createExpense,deleteExpense,updateExpense,getExpenseById } from "../controllers/expenseController";
+import {
+  getAllExpenses,
+  createExpense,
+  deleteExpense,
+  updateExpense,
+  getExpenseById,
+} from "../controllers/expenseController";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -33,22 +47,24 @@ router.get("/drugs/:id", getDrugById);
 router.post("/drugs", addDrug);
 router.put("/drugs/:id", updateDrug);
 router.delete("/drugs/:id", deleteDrug);
+router.get("/drugs/top", (req, res) => {
+  console.log("Top drugs route hit");
+  res.send("Top drugs route");
+});
 
 // Bill routes
-router.post("/api/bill/create", createBill);
-router.get("/api/bill/:bill_id", getBillById);
-router.delete("/api/bill/remove/:id", removeBill);
-router.put("/api/bill/update/:id", updateBill);
-router.get("/api/bill/history", history);
-router.get("/api/bill/dashboard/:year", dashboard);
+router.post("/bill/create", createBill);
+router.get("/bill/:bill_id", getBillById);
+router.delete("/bill/remove/:id", removeBill);
+router.put("/bill/update/:id", updateBill);
+router.get("/bill/history", history);
+router.get("/bill/dashboard/:year", dashboard);
 
-router.get("api/expenses", getAllExpenses);
-router.post("api/expense/create", createExpense);
-router.delete("api/expense/remove/:id", deleteExpense);
-router.put("api/expense/update/:id", updateExpense);
-router.get("api/expense/:id", getExpenseById);
-
-
+router.get("/expense", getAllExpenses);
+router.post("/expense/create", createExpense);
+router.delete("/expense/remove/:id", deleteExpense);
+router.put("/expense/update/:id", updateExpense);
+router.get("/expense/:id", getExpenseById);
 
 router.get("/", (req: Request, res: Response) => {
   res.send("Hello World");

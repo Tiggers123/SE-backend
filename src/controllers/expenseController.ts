@@ -3,14 +3,14 @@ import pool from "../config/database";
 
 export const createExpense = async (req: Request, res: Response) => {
   const client = await pool.connect();
-
+    console.log(req.body);
   try {
     await client.query("BEGIN");
     const { datetime, orderid, quantity, name, price, totalprice } = req.body;
 
     // Create the expense first
     const insertExpenseQuery = `
-      INSERT INTO expenses (datetime, orderid, quantity, name, price, totalprice)
+      INSERT INTO expense (datetime, orderid, quantity, name, price, totalprice)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id;
     `;
@@ -41,7 +41,7 @@ export const getExpenseById = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const getExpenseQuery = "SELECT * FROM expenses WHERE id = $1";
+    const getExpenseQuery = "SELECT * FROM expense WHERE id = $1";
     const expenseResult = await client.query(getExpenseQuery, [id]);
 
     if (expenseResult.rows.length === 0) {
@@ -61,7 +61,7 @@ export const getAllExpenses = async (req: Request, res: Response) => {
   const client = await pool.connect();
 
   try {
-    const getExpensesQuery = "SELECT * FROM expenses";
+    const getExpensesQuery = "SELECT * FROM expense";
     const expensesResult = await client.query(getExpensesQuery);
 
     res.json(expensesResult.rows);
@@ -81,7 +81,7 @@ export const updateExpense = async (req: Request, res: Response) => {
     await client.query("BEGIN");
 
     const updateExpenseQuery = `
-      UPDATE expenses
+      UPDATE expense
       SET datetime = $1, orderid = $2, quantity = $3, name = $4, price = $5, totalprice = $6
       WHERE id = $7
       RETURNING *;
@@ -111,7 +111,7 @@ export const deleteExpense = async (req: Request, res: Response) => {
   try {
     await client.query("BEGIN");
 
-    const deleteExpenseQuery = "DELETE FROM expenses WHERE id = $1 RETURNING *";
+    const deleteExpenseQuery = "DELETE FROM expense WHERE id = $1 RETURNING *";
     const expenseResult = await client.query(deleteExpenseQuery, [id]);
 
     if (expenseResult.rows.length === 0) {

@@ -24,12 +24,12 @@ const createTables = async () => {
     await client.query("BEGIN");
 
     // Drop existing tables in correct order
-    await client.query(`
-      DROP TABLE IF EXISTS bill_items CASCADE;
-      DROP TABLE IF EXISTS bills CASCADE;
-      DROP TABLE IF EXISTS stocks CASCADE;
-      DROP TABLE IF EXISTS drugs CASCADE;
-    `);
+    // await client.query(`
+    //   DROP TABLE IF EXISTS bill_items CASCADE;
+    //   DROP TABLE IF EXISTS bills CASCADE;
+    //   DROP TABLE IF EXISTS stocks CASCADE;
+    //   DROP TABLE IF EXISTS drugs CASCADE;
+    // `);
 
     // Create tables
     await client.query(`
@@ -45,7 +45,8 @@ const createTables = async () => {
         unit_type VARCHAR(50) NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        sold_count INTEGER DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS stocks (
@@ -60,7 +61,7 @@ const createTables = async () => {
 
       CREATE TABLE IF NOT EXISTS bills (
         bill_id SERIAL PRIMARY KEY,
-        customer_name VARCHAR(100),
+        customer_name VARCHAR(100) NULL,
         total_amount DECIMAL(10,2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -77,10 +78,10 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS expense (
         id SERIAL PRIMARY KEY,
         datetime TIMESTAMP NOT NULL,
-        orderid INTEGER NOT NULL,
-        quantity INTEGER[] NOT NULL,
-        name TEXT[] NOT NULL,
-        price NUMERIC[] NOT NULL,
+        orderid INTEGER NOT NULL, -- Add this
+        quantity INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        price NUMERIC NOT NULL,
         totalprice NUMERIC NOT NULL
       );
     `);

@@ -19,27 +19,43 @@ export const createBill = async (req: Request, res: Response) => {
     const billResult = await client.query(insertBillQuery, [customer_name, 0]);
     const billId = billResult.rows[0].bill_id;
 
-    // Add each item
+    // Add each item to the bill
     for (const item of items) {
       const { stock_id, quantity } = item;
 
-      // Get stock details
-      const stockQuery = "SELECT unit_price FROM stocks WHERE stock_id = $1";
+      // Get stock details including drug_id
+      const stockQuery = "SELECT unit_price, drug_id FROM stocks WHERE stock_id = $1";
       const stockResult = await client.query(stockQuery, [stock_id]);
 
       if (stockResult.rows.length === 0) {
         throw new Error(`Stock with id ${stock_id} not found`);
       }
 
-      const unitPrice = stockResult.rows[0].unit_price;
-      const subtotal = unitPrice * quantity;
+      const { unit_price, drug_id } = stockResult.rows[0];
+      const subtotal = unit_price * quantity;
       totalAmount += subtotal;
 
-      // Insert bill item without unit_price
+      // Insert bill item
       await client.query(
         `INSERT INTO bill_items (bill_id, stock_id, quantity, subtotal)
          VALUES ($1, $2, $3, $4)`,
         [billId, stock_id, quantity, subtotal]
+      );
+
+      // Update sold_count for the drug
+      await client.query(
+        `UPDATE drugs
+         SET sold_count = sold_count + $1
+         WHERE drug_id = $2`,
+        [quantity, drug_id]
+      );
+
+      // Deduct stock amount
+      await client.query(
+        `UPDATE stocks
+         SET amount = amount - $1
+         WHERE stock_id = $2`,
+        [quantity, stock_id]
       );
     }
 
@@ -51,7 +67,7 @@ export const createBill = async (req: Request, res: Response) => {
 
     await client.query("COMMIT");
 
-    // Get complete bill
+    // Get complete bill details
     const completeBill = await client.query(
       `SELECT 
         b.bill_id,
