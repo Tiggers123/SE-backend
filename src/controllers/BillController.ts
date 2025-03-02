@@ -157,22 +157,6 @@ export const createBill = async (req: Request, res: Response) => {
           customPrice,
         ]
       );
-
-      // Update sold_count for the drug
-      await client.query(
-        `UPDATE drugs
-         SET sold_count = sold_count + $1
-         WHERE drug_id = $2`,
-        [quantity, drug_id]
-      );
-
-      // Deduct stock amount
-      await client.query(
-        `UPDATE stocks
-         SET amount = amount - $1
-         WHERE stock_id = $2`,
-        [quantity, stock_id]
-      );
     }
 
     await client.query("COMMIT");
@@ -519,12 +503,12 @@ export const confirm = async (req: Request, res: Response): Promise<void> => {
       throw new Error("Discounted amount cannot be negative");
     }
 
-    const currentDate = new Date(); 
+    const currentDate = new Date();
 
     const billResult = await client.query(
       `INSERT INTO bills (total_amount, discount, created_at)
        VALUES ($1, $2, $3) RETURNING bill_id`,
-      [discountedAmount, discount, currentDate] 
+      [discountedAmount, discount, currentDate]
     );
 
     const newBillId = billResult.rows[0].bill_id;
@@ -580,7 +564,6 @@ export const confirm = async (req: Request, res: Response): Promise<void> => {
     client.release();
   }
 };
-
 
 export const history = async (req: Request, res: Response) => {
   const client = await pool.connect();
@@ -774,7 +757,6 @@ export const dashboard = async (req: Request, res: Response) => {
       ORDER BY month;
     `;
     const expensesResult = await client.query(expensesQuery, [year]);
-  
 
     // สร้างข้อมูลที่รวมยอดขายและค่าใช้จ่ายของแต่ละเดือน
     const monthlyData = dashboardResult.rows.map((row) => {
@@ -832,7 +814,6 @@ export const dashboard = async (req: Request, res: Response) => {
 
     // แสดงข้อมูลทุกเดือน (ไม่กรอง)
     const finalMonthlyData = monthlyData; // ใช้ข้อมูลทั้งหมด ไม่กรองเดือนที่ค่าใช้จ่ายเป็น 0
-  
 
     // ส่งข้อมูลกลับไปยัง client
     res.status(200).json({
@@ -856,8 +837,6 @@ export const dashboard = async (req: Request, res: Response) => {
     client.release();
   }
 };
-
-
 
 // export const getBillInfo = async (
 //   req: Request,
